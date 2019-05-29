@@ -10,8 +10,9 @@ class Rotor
       string type;
       string wiring;
       int offset;
+      int rotation_amount;
       
-      queue<int> queue_wiring;
+      deque<int> deque_wiring;
    
    public:
       // Constructor method 
@@ -20,8 +21,9 @@ class Rotor
          type = t;
          wiring = w;
          offset = off;
+         rotation_amount = 0;
 
-         createQueue(wiring);
+         createDeque(wiring);
          applyOffset();
       }
 
@@ -37,6 +39,11 @@ class Rotor
          return offset;
       }
 
+      deque<int> getDeque()
+      {
+         return deque_wiring;
+      }
+
       // Set the type (also referenced as a model in this code) of the rotor, tipically a string.
       void setType(string s)
       {
@@ -49,12 +56,12 @@ class Rotor
          offset = off; 
       }
       
-      // Creates a queue, based on the given wiring. This is defined by the model of the rotor, and can be analyzed with Rotor class getters, or in wirings.txt.
-      void createQueue(string s)
+      // Creates a deque, based on the given wiring. This is defined by the model of the rotor, and can be analyzed with Rotor class getters, or in wirings.txt.
+      void createDeque(string s)
       {
          for (int i = 0; i < s.length(); i++)
          {
-            queue_wiring.push(s[i]);
+            deque_wiring.push_back(s[i]);
          }  
       }
 
@@ -63,10 +70,28 @@ class Rotor
       {
          for (int i = 0; i < offset; i++)
          {
-            char aux = queue_wiring.back();
-            queue_wiring.pop();
-            queue_wiring.push(aux);
+            deque_wiring.push_front(deque_wiring.back());
+            deque_wiring.pop_back();
          }
+      }
+
+      // Simulates a rotation of the rotor
+      int rotate()
+      {
+         deque_wiring.push_front(deque_wiring.back());
+         deque_wiring.pop_back();
+
+         int flag_full_turn = 0;
+
+         if(rotation_amount == 26)
+         {
+            rotation_amount = 0;
+            flag_full_turn = 1;
+         }
+         else
+            rotation_amount++;
+
+         return flag_full_turn;
       }
 };
 
@@ -92,6 +117,33 @@ class Enigma
       Rotor getSingleRotor(int pos)
       {
          return rotors[pos];
+      }
+
+      int encrypt(int code)
+      {
+         int idx = 0; // Variable that stores a temporary counter.
+         
+         // Whenever a char is pressed, rotates the first rotor, before the encryption is made.
+         int flag_full_turn = rotors[idx].rotate();
+
+         while(flag_full_turn == 1 && idx < rotors.size())
+         {
+            idx++;
+            flag_full_turn = rotors[idx].rotate();
+         }
+
+         for (int i = 0; i < rotors.size(); i++)
+         {
+            Rotor current_rotor = getSingleRotor(i);            
+            
+            deque<int> current_rotor_wiring = current_rotor.getDeque();
+
+            code = current_rotor_wiring.at(code-1);
+
+            Rotor prev_rotor = current_rotor;
+         }
+
+         return code;
       }
 };
 
@@ -171,10 +223,24 @@ Enigma setEnigma()
    return enigma;
 }
 
+// The implemented logic uses numbers to identify each letter (range 1-26). This function does a simple conversion between char and integer types, using ASCII codes.
+int inputToInteger(char c)
+{
+   char lower_c = tolower(c);
+   int code = lower_c - 96;
+
+   return code;
+}
+
 void step()
 {
    char input;
 
+   while (true)
+   {
+      cin >> input;
+      int code = inputToInteger(input);
+   }
 }
 
 int main()
@@ -183,4 +249,6 @@ int main()
 
    // Check if Enigma class and its objects are working correctly.
    cout << enigma.getSingleRotor(0).getType() << endl;
+
+   step();
 }
