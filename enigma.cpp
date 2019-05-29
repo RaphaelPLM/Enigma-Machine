@@ -6,7 +6,7 @@ using namespace std;
 class Rotor
 {
    private:
-      // Constructor elements
+      // Constructor elements. Rotors includes a type (a.k.a model), a wiring configuration (see wirings.txt) and an initial offset.
       string type;
       string wiring;
       int offset;
@@ -14,6 +14,7 @@ class Rotor
       queue<int> queue_wiring;
    
    public:
+      // Constructor method 
       Rotor(string t, string w, int off)
       {
          type = t;
@@ -24,17 +25,19 @@ class Rotor
          applyOffset();
       }
 
+      // Get type, for debugging purposes.
       string getType()
       {
          return type;
       }
 
+      // Get offset, for debugging purposes.
       int getOffset()
       {
          return offset;
       }
 
-      // Set the type of the rotor, tipically a string
+      // Set the type (also referenced as a model in this code) of the rotor, tipically a string.
       void setType(string s)
       {
          type = s;
@@ -46,7 +49,7 @@ class Rotor
          offset = off; 
       }
       
-      // Creates a queue, based on the given wiring. This is defined by the model of the rotor.
+      // Creates a queue, based on the given wiring. This is defined by the model of the rotor, and can be analyzed with Rotor class getters, or in wirings.txt.
       void createQueue(string s)
       {
          for (int i = 0; i < s.length(); i++)
@@ -67,6 +70,32 @@ class Rotor
       }
 };
 
+// Enigma class
+class Enigma
+{
+   private:
+      // An enigma include a set of rotors.
+      vector<Rotor> rotors;
+   
+   public:
+      
+      Enigma(vector<Rotor> v)
+      {
+         rotors = v;
+      }
+
+      vector<Rotor> getRotors()
+      {
+         return rotors;
+      }
+
+      Rotor getSingleRotor(int pos)
+      {
+         return rotors[pos];
+      }
+};
+
+// Gets user input, based on the index of the rotor to be scanned. TODO: Handle unsupported inputs. 
 int getInput(int index)
 {
    int input;
@@ -93,27 +122,53 @@ int getInput(int index)
 tuple<string, string, int> scanRotor(int index)
 {
    int idx_rotor = getInput(index);
+   
+   // This pair is used as an auxiliar variable to store returns from searchRotor() function.
    pair<string, string> pair_model_wiring = searchRotor(idx_rotor);
 
-
+   // Assign each variable stored in the pair to a specific string (Rule #1: ALWAYS use mnemonic variable names).
    string model = pair_model_wiring.first;
    string wiring = pair_model_wiring.second;
+   
+   // Scans the initial offset. TODO: Handle exceptions, and support both letters or numbers.
    int offset;
    
    // Scans the offset
    cout << "Set the initial offset for this rotor: ";
    cin >> offset;
 
+   // Returns a tuple consisting off all the information needed to create a Rotor-type object.
    return make_tuple(model, wiring, offset);
 }
 
+/* 
+   This function calls the procedure to scan the model of the desired rotor (passed as argument of this function). 
+   Then, it generates a Rotor object with that info. 
+*/
 Rotor createRotor(int index)
 {
+   // Receives a tuple with the following format <MODEL, WIRING, OFFSET>
    tuple<string, string, int> tuple = scanRotor(index);
       
+   // Finally, creates an object and returns it.   
    Rotor rotor(get<0>(tuple), get<1>(tuple), get<2>(tuple));
 
    return rotor;
+}
+
+// Sets an enigma machine. This is done by filling it slots (vector of Rotors -> dinamically allocated) with rotors.
+Enigma setEnigma()
+{
+   // Creates all the 3 rotors. TODO: Setup a way to allow user to include any amount of rotors.
+   Rotor right_rotor = createRotor(1);
+   Rotor center_rotor = createRotor(2);
+   Rotor left_rotor = createRotor(3);
+
+   vector<Rotor> set_of_rotors{right_rotor, center_rotor, left_rotor};
+
+   Enigma enigma(set_of_rotors);
+
+   return enigma;
 }
 
 void step()
@@ -124,7 +179,8 @@ void step()
 
 int main()
 {
-   Rotor rotor = createRotor(1);
-   cout << rotor.getType() << endl;
-   cout << rotor.getOffset() << endl;
+   Enigma enigma = setEnigma();
+
+   // Check if Enigma class and its objects are working correctly.
+   cout << enigma.getSingleRotor(0).getType() << endl;
 }
