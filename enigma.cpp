@@ -3,6 +3,8 @@
 
 using namespace std;
 
+int inputToInteger(char c);
+
 class Rotor
 {
    private:
@@ -78,12 +80,13 @@ class Rotor
       // Simulates a rotation of the rotor
       int rotate()
       {
-         deque_wiring.push_front(deque_wiring.back());
+         char deque_back = deque_wiring.back();
          deque_wiring.pop_back();
+         deque_wiring.push_front(deque_back);
 
          int flag_full_turn = 0;
 
-         if(rotation_amount == 26)
+         if(rotation_amount == 25)
          {
             rotation_amount = 0;
             flag_full_turn = 1;
@@ -126,6 +129,7 @@ class Enigma
          // Whenever a char is pressed, rotates the first rotor, before the encryption is made.
          int flag_full_turn = rotors[idx].rotate();
 
+         // Perform the full rotation of rotors, whenever flag_full_turn is activated
          while(flag_full_turn == 1 && idx < rotors.size())
          {
             idx++;
@@ -138,14 +142,20 @@ class Enigma
             
             deque<int> current_rotor_wiring = current_rotor.getDeque();
 
-            code = current_rotor_wiring.at(code-1);
-
-            Rotor prev_rotor = current_rotor;
+            code = current_rotor_wiring.at(inputToInteger(code) - 1);
+         
+            cout << "ENCODED " << (char) code << " ";
          }
 
          return code;
       }
 };
+
+
+//YCXXZIFKKRDYOOX
+
+
+
 
 // Gets user input, based on the index of the rotor to be scanned. TODO: Handle unsupported inputs. 
 int getInput(int index)
@@ -236,10 +246,9 @@ void step()
 {
    char input;
 
-   while (true)
+   while(true)
    {
-      cin >> input;
-      int code = inputToInteger(input);
+
    }
 }
 
@@ -248,7 +257,21 @@ int main()
    Enigma enigma = setEnigma();
 
    // Check if Enigma class and its objects are working correctly.
-   cout << enigma.getSingleRotor(0).getType() << endl;
+   // cout << enigma.getSingleRotor(0).getType() << endl;
+
+   int count = 1;
+
+   while(true)
+   {
+      char c;
+      
+      cin >> c;
+   
+      cout << count << ". " << c << " -> " << (char) enigma.encrypt(c) << endl;
+   
+      count++;
+   }
+
 
    step();
 }
